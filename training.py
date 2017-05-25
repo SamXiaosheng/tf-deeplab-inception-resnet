@@ -6,9 +6,8 @@ import sys
 import os
 
 OUT_DIR = "/tmp/deeplab"
-SLIM_DIR = os.path.abspath("../models/slim")
 LIB_DIR = os.path.abspath("./lib")
-sys.path.extend([ SLIM_DIR, LIB_DIR ])
+sys.path.extend([ LIB_DIR ])
 
 import tensorflow as tf
 import deeplab
