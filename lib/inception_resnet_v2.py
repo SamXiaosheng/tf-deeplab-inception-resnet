@@ -204,23 +204,27 @@ def inception_resnet_v2(inputs, num_classes=1001, is_training=True,
         #                              scope='Logits')
         #   end_points['AuxLogits'] = aux
 
+        # In the original Inception-ResNet architecture, this Mixed_7a layer
+        # takes the original image from 17x17 to 8x8. Instead, we keep strides=1
+        # in order to keep the resolution at 15x15. This size will be carried
+        # through the rest of the net
         with tf.variable_scope('Mixed_7a'):
           with tf.variable_scope('Branch_0'):
-            tower_conv = slim.conv2d(net, 256, 1, scope='Conv2d_0a_1x1')
-            tower_conv_1 = slim.conv2d(tower_conv, 384, 3, stride=2,
+            tower_conv = slim.conv2d(net, 64, 1, scope='Conv2d_0a_1x1')
+            tower_conv_1 = slim.conv2d(tower_conv, 384, 3, stride=1,
                                        padding='VALID', scope='Conv2d_1a_3x3')
           with tf.variable_scope('Branch_1'):
-            tower_conv1 = slim.conv2d(net, 256, 1, scope='Conv2d_0a_1x1')
-            tower_conv1_1 = slim.conv2d(tower_conv1, 288, 3, stride=2,
+            tower_conv1 = slim.conv2d(net, 64, 1, scope='Conv2d_0a_1x1')
+            tower_conv1_1 = slim.conv2d(tower_conv1, 288, 3, stride=1,
                                         padding='VALID', scope='Conv2d_1a_3x3')
           with tf.variable_scope('Branch_2'):
-            tower_conv2 = slim.conv2d(net, 256, 1, scope='Conv2d_0a_1x1')
-            tower_conv2_1 = slim.conv2d(tower_conv2, 288, 3,
+            tower_conv2 = slim.conv2d(net, 64, 1, scope='Conv2d_0a_1x1')
+            tower_conv2_1 = slim.conv2d(tower_conv2, 288, 3, stride=1,
                                         scope='Conv2d_0b_3x3')
-            tower_conv2_2 = slim.conv2d(tower_conv2_1, 320, 3, stride=2,
+            tower_conv2_2 = slim.conv2d(tower_conv2_1, 80, 3, stride=1,
                                         padding='VALID', scope='Conv2d_1a_3x3')
           with tf.variable_scope('Branch_3'):
-            tower_pool = slim.max_pool2d(net, 3, stride=2, padding='VALID',
+            tower_pool = slim.max_pool2d(net, 3, stride=1, padding='VALID',
                                          scope='MaxPool_1a_3x3')
           net = tf.concat(axis=3, values=[tower_conv_1, tower_conv1_1,
                               tower_conv2_2, tower_pool])
@@ -230,10 +234,10 @@ def inception_resnet_v2(inputs, num_classes=1001, is_training=True,
         net = slim.repeat(net, 9, block8, scale=0.20)
         net = block8(net, activation_fn=None)
 
-        net = slim.conv2d(net, 1536, 1, scope='Conv2d_7b_1x1')
-        end_points['Conv2d_7b_1x1'] = net
-
         ## "Decapitate" the deep network
+        # net = slim.conv2d(net, 1536, 1, scope='Conv2d_7b_1x1')
+        # end_points['Conv2d_7b_1x1'] = net
+
         # with tf.variable_scope('Logits'):
         #   end_points['PrePool'] = net
         #   net = slim.avg_pool2d(net, net.get_shape()[1:3], padding='VALID',
