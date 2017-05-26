@@ -174,18 +174,17 @@ def inception_resnet_v2(inputs, num_classes=1001, is_training=True,
         # 17 x 17 x 1088
         with tf.variable_scope('Mixed_6a'):
           with tf.variable_scope('Branch_0'):
-            tower_conv = slim.conv2d(net, 384, 3, stride=2, padding='VALID',
+            tower_conv = slim.conv2d(net, 96, 3, stride=1, padding='SAME',
                                      scope='Conv2d_1a_3x3')
           with tf.variable_scope('Branch_1'):
             tower_conv1_0 = slim.conv2d(net, 256, 1, scope='Conv2d_0a_1x1')
             tower_conv1_1 = slim.conv2d(tower_conv1_0, 256, 3,
                                         scope='Conv2d_0b_3x3')
-            tower_conv1_2 = slim.conv2d(tower_conv1_1, 384, 3,
-                                        stride=2, padding='VALID',
+            tower_conv1_2 = slim.conv2d(tower_conv1_1, 96, 3,
+                                        stride=1, padding='SAME',
                                         scope='Conv2d_1a_3x3')
           with tf.variable_scope('Branch_2'):
-            tower_pool = slim.max_pool2d(net, 3, stride=2, padding='VALID',
-                                         scope='MaxPool_1a_3x3')
+            tower_pool = net
           net = tf.concat(axis=3, values=[tower_conv, tower_conv1_2, tower_pool])
 
         end_points['Mixed_6a'] = net
@@ -207,7 +206,8 @@ def inception_resnet_v2(inputs, num_classes=1001, is_training=True,
         # In the original Inception-ResNet architecture, this Mixed_7a layer
         # takes the original image from 17x17 to 8x8. Instead, we keep strides=1
         # in order to keep the resolution at 15x15. This size will be carried
-        # through the rest of the net
+        # through the rest of the net. Note, we also reduce the number of filters
+        # by 4x to account for the 2x increase in image length.
         with tf.variable_scope('Mixed_7a'):
           with tf.variable_scope('Branch_0'):
             tower_conv = slim.conv2d(net, 64, 1, scope='Conv2d_0a_1x1')
