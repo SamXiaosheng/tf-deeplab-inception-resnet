@@ -212,19 +212,19 @@ def inception_resnet_v2(inputs, num_classes=1001, is_training=True,
           with tf.variable_scope('Branch_0'):
             tower_conv = slim.conv2d(net, 64, 1, scope='Conv2d_0a_1x1')
             tower_conv_1 = slim.conv2d(tower_conv, 384, 3, stride=1,
-                                       padding='VALID', scope='Conv2d_1a_3x3')
+                                       padding='SAME', scope='Conv2d_1a_3x3')
           with tf.variable_scope('Branch_1'):
             tower_conv1 = slim.conv2d(net, 64, 1, scope='Conv2d_0a_1x1')
             tower_conv1_1 = slim.conv2d(tower_conv1, 288, 3, stride=1,
-                                        padding='VALID', scope='Conv2d_1a_3x3')
+                                        padding='SAME', scope='Conv2d_1a_3x3')
           with tf.variable_scope('Branch_2'):
             tower_conv2 = slim.conv2d(net, 64, 1, scope='Conv2d_0a_1x1')
             tower_conv2_1 = slim.conv2d(tower_conv2, 288, 3, stride=1,
                                         scope='Conv2d_0b_3x3')
             tower_conv2_2 = slim.conv2d(tower_conv2_1, 80, 3, stride=1,
-                                        padding='VALID', scope='Conv2d_1a_3x3')
+                                        padding='SAME', scope='Conv2d_1a_3x3')
           with tf.variable_scope('Branch_3'):
-            tower_pool = slim.max_pool2d(net, 3, stride=1, padding='VALID',
+            tower_pool = slim.max_pool2d(net, 3, stride=1, padding='SAME',
                                          scope='MaxPool_1a_3x3')
           net = tf.concat(axis=3, values=[tower_conv_1, tower_conv1_1,
                               tower_conv2_2, tower_pool])
