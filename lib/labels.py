@@ -30,3 +30,6 @@ _LABELS_AS_DICT = dict( zip(_LABELS, range(len(_LABELS))) )
 
 def index_of_label(label):
     return _LABELS_AS_DICT.get(label)
+
+def label_of_index(ind):
+    return _LABELS[ind]

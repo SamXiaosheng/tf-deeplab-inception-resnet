@@ -11,5 +11,9 @@ class LabelsTest(tf.test.TestCase):
         self.assertEqual(labels.index_of_label("bus"), 6)
         self.assertIsNone(labels.index_of_label("fizzypoof"))
 
+    def test_label_of_index(self):
+        self.assertEqual(labels.label_of_index(0), "background")
+        self.assertEqual(labels.label_of_index(20), "tvmonitor")
+
 if __name__ == '__main__':
     tf.test.main()
