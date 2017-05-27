@@ -5,7 +5,7 @@ from __future__ import print_function
 import tensorflow as tf
 from inception_resnet_v2 import inception_resnet_v2
 
-class InceptionResnetTest(tf.test.TestCase):
+class InceptionResnetV2Test(tf.test.TestCase):
     def testNetworkSetup(self):
         images = tf.placeholder(tf.float32, shape=[10, 299, 299, 3])
         net = inception_resnet_v2(images)
