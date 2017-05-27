@@ -4,7 +4,7 @@ from __future__ import print_function
 
 import numpy as np
 
-_LABELS = [
+Labels = [
     "background",
     "aeroplane",
     "bicycle",
@@ -28,7 +28,7 @@ _LABELS = [
     "tvmonitor"
 ]
 
-_LABELS_AS_DICT = dict( zip(_LABELS, range(len(_LABELS))) )
+LabelsToIndices = dict( zip(Labels, range(len(Labels))) )
 
 def _bitiget(num, pos):
     return ((num & (1 << pos)) != 0)
@@ -48,16 +48,16 @@ def _colormap():
 
     return cmap
 
-_COLORMAP = _colormap()
+Colormap = _colormap()
 
 def index_of_label(label):
-    return _LABELS_AS_DICT.get(label)
+    return LabelsToIndices.get(label)
 
 def label_of_index(ind):
-    return _LABELS[ind]
+    return Labels[ind]
 
 def color_of_label(label):
     return color_of_index(index_of_label(label))
 
 def color_of_index(ind):
-    return _COLORMAP[ind, :]
+    return Colormap[ind, :]

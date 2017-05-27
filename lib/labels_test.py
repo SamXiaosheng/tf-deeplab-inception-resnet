@@ -17,11 +17,14 @@ class LabelsTest(tf.test.TestCase):
         self.assertEqual(labels.label_of_index(20), "tvmonitor")
 
     def test_color_of_label(self):
-        print(labels.color_of_label("background"))
-        print(labels.color_of_label("bus"))
         self.assertAllEqual(labels.color_of_label("background"), np.array([0, 0, 0]))
         self.assertAllEqual(labels.color_of_label("bus"), np.array([0, 128, 128]))
         self.assertAllEqual(labels.color_of_label("person"), np.array([192, 128, 128]))
+
+    def test_equality_of_colors(self):
+        for label in labels.Labels:
+            self.assertAllEqual(labels.color_of_label(label),
+                labels.color_of_index(labels.index_of_label(label)))
 
 if __name__ == '__main__':
     tf.test.main()
