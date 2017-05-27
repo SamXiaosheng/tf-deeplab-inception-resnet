@@ -15,5 +15,10 @@ class LabelsTest(tf.test.TestCase):
         self.assertEqual(labels.label_of_index(0), "background")
         self.assertEqual(labels.label_of_index(20), "tvmonitor")
 
+    def test_color_of_label(label):
+        self.assertEqual(labels.color_of_label("background"), np.array([0, 0, 0]))
+        self.assertEqual(labels.color_of_label("bus"), np.array([0, 128, 128]))
+        self.assertEqual(labels.color_of_label("person"), np.array([192, 128, 128]))
+
 if __name__ == '__main__':
     tf.test.main()

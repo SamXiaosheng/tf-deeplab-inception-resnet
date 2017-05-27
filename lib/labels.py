@@ -33,3 +33,9 @@ def index_of_label(label):
 
 def label_of_index(ind):
     return _LABELS[ind]
+
+def color_of_label(label):
+    pass
+
+def color_of_index(ind):
+    pass
