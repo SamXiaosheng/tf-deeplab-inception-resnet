@@ -3,6 +3,9 @@ from __future__ import division
 from __future__ import print_function
 
 import numpy as np
+import tensorflow as tf
+
+MAX_INT8 = np.iinfo(np.int8).max # Magic pixel value to ignore
 
 Labels = [
     "background",
@@ -61,3 +64,18 @@ def color_of_label(label):
 
 def color_of_index(ind):
     return Colormap[ind, :]
+
+def to_labels(tensor, scope="ToLabels"):
+    with tf.name_scope(scope):
+        shape = tensor.shape
+        labeled_tensor = MAX_INT8 * tf.ones([shape[0], shape[1], shape[2]], dtype=tf.int8)
+
+        for label in Labels:
+            opname = "Mask_%s" % (label)
+            color = color_of_label(label)
+            index = index_of_label(label)
+            mask = tf.reduce_all(tf.equal(tensor, color, name=opname), axis=3, name=opname)
+
+            labeled_tensor = tf.where(mask, index * tf.ones_like(labeled_tensor), labeled_tensor)
+
+        return labeled_tensor

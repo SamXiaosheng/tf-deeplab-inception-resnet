@@ -26,5 +26,17 @@ class LabelsTest(tf.test.TestCase):
             self.assertAllEqual(labels.color_of_label(label),
                 labels.color_of_index(labels.index_of_label(label)))
 
+    def test_tensor_conversion(self):
+        with self.test_session() as sess:
+            for label in labels.Labels:
+                gf_image = np.array(labels.color_of_label(label)).reshape((1, 1, 1, 3))
+                expected = np.array(labels.index_of_label(label)).reshape((1, 1, 1))
+
+                gf = tf.constant(gf_image)
+                labeled = sess.run(labels.to_labels(gf))
+
+                self.assertAllEqual(labeled, expected)
+
+
 if __name__ == '__main__':
     tf.test.main()
