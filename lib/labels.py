@@ -33,6 +33,8 @@ Labels = [
 
 LabelsToIndices = dict( zip(Labels, range(len(Labels))) )
 
+NumClasses = len(Labels)
+
 def _bitiget(num, pos):
     return ((num & (1 << pos)) != 0)
 

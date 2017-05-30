@@ -29,11 +29,11 @@ class LabelsTest(tf.test.TestCase):
     def test_tensor_conversion(self):
         with self.test_session() as sess:
             for label in labels.Labels:
-                gf_image = np.array(labels.color_of_label(label)).reshape((1, 1, 1, 3))
+                gt_image = np.array(labels.color_of_label(label)).reshape((1, 1, 1, 3))
                 expected = np.array(labels.index_of_label(label)).reshape((1, 1, 1))
 
-                gf = tf.constant(gf_image)
-                labeled = sess.run(labels.to_labels(gf))
+                gt = tf.constant(gt_image)
+                labeled = sess.run(labels.to_labels(gt))
 
                 self.assertAllEqual(labeled, expected)
 
