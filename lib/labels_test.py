@@ -46,5 +46,17 @@ class LabelsTest(tf.test.TestCase):
 
                 self.assertAllEqual(img, expected)
 
+    def test_binective_behavior(self):
+        imgs = 255.0 * np.ones((4, 2, 2, 3))
+        for i in range(3):
+            imgs[i, :, :, :] = labels.color_of_index(i)
+
+        with self.test_session() as sess:
+            labeled = labels.to_labels(tf.constant(imgs))
+            converted = labels.to_images(labeled)
+            converted_imgs = sess.run(converted)
+
+            self.assertAllClose(converted_imgs, imgs)
+
 if __name__ == '__main__':
     tf.test.main()
