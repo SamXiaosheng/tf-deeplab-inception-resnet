@@ -6,7 +6,24 @@ import numpy as np
 import tensorflow as tf
 
 from labels import NumClasses
-from training import cross_entropy_loss
+from training import average_accuracy
+
+# GT
+# 0  1
+# 1 20
+
+# PRED
+# 0 1
+# 1 1
+
+# Expected Accuracy (0)  = 1 / (1 + 0 + 0) = 100%
+# Expected Accuracy (1)  = 2 / (2 + 0 + 1) = 66%
+# Expected Accuracy (20) = 0 / (0 + 0 + 1) = 0%
+# Avg = 55.33%
+
+
+
+
 
 def create_gt():
     gt = np.zeros((1, 2, 2))
@@ -23,16 +40,14 @@ def create_preds():
     return tf.constant(preds)
 
 class TrainingTest(tf.test.TestCase):
-    def test_cross_entropy_loss(self):
+    def test_average_accuracy_true_positive(self):
         gt = create_gt()
         preds = create_preds()
-        expected_xentropy = 123.0
+        expected_accuracy = 0.5533333333333333333
 
         with self.test_session() as sess:
-            computed_xentropy = cross_entropy_loss(gt, preds)
-            self.assertAlmostEqual(expected_xentropy, computed_xentropy)
-
-
+            computed_accuracy = sess.run(average_accuracy(gt, preds))
+            self.assertAlmostEqual(computed_accuracy, expected_accuracy)
 
 if __name__ == '__main__':
     tf.test.main()
