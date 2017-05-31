@@ -5,7 +5,7 @@ from __future__ import print_function
 import numpy as np
 import tensorflow as tf
 
-from labels import NumClasses
+from labels import MaxInt8, NumClasses
 from training import average_accuracy
 
 # GT
@@ -79,7 +79,18 @@ class TrainingTest(tf.test.TestCase):
             self.assertAlmostEqual(0.5, computed_accuracy)
 
     def test_average_accuracy_with_ignore_pixels(self):
-        pass
+        gt = np.zeros((1, 1, 2))
+        gt[0, 0, 1] = MaxInt8
+        gt = tf.constant(gt)
+
+        preds = np.zeros((1, 1, 2, NumClasses))
+        preds[0, 0, :, 0] = 1.0
+        preds = tf.constant(preds)
+
+        with self.test_session() as sess:
+            computed_accuracy = sess.run(average_accuracy(gt, preds))
+
+            self.assertAlmostEqual(1.0, computed_accuracy)
 
 
 if __name__ == '__main__':

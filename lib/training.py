@@ -3,7 +3,7 @@ from __future__ import division
 from __future__ import print_function
 
 import tensorflow as tf
-from labels import Labels, index_of_label
+from labels import MaxInt8, Labels, index_of_label
 
 def _sum(tensor):
     return tf.reduce_sum(tf.cast(tensor, dtype=tf.int64), axis=[1, 2])
@@ -14,10 +14,16 @@ def _avg_label_accuracy(label, gt, preds):
 
         preds_true = tf.equal(preds, index)
         gt_true = tf.equal(gt, index)
+        ignore_pixels = tf.equal(gt, MaxInt8)
 
         true_positives = tf.logical_and(preds_true, gt_true)
-        false_positives = tf.logical_and(preds_true, tf.logical_not(gt_true))
         false_negatives = tf.logical_and(gt_true, tf.logical_not(preds_true))
+
+        # Note, we need to account for pixels that have the special MaxInt8. These pixels
+        # should not be counted as false positives
+        false_positives = tf.logical_and(
+            tf.logical_not(ignore_pixels),
+            tf.logical_and(preds_true, tf.logical_not(gt_true)))
 
         denoms = tf.add_n([ _sum(true_positives), _sum(false_positives), _sum(false_negatives) ])
 
