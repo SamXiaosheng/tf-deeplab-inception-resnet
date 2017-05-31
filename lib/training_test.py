@@ -40,6 +40,7 @@ def create_preds():
     return tf.constant(preds)
 
 class TrainingTest(tf.test.TestCase):
+    # Next couple of test cases just test some random scenarios that ought to be satisfied
     def test_average_accuracy_true_positive(self):
         gt = create_gt()
         preds = create_preds()
@@ -60,6 +61,25 @@ class TrainingTest(tf.test.TestCase):
             computed_accuracy = sess.run(average_accuracy(gt, preds))
 
             self.assertAlmostEqual(expected_accuracy, computed_accuracy)
+
+    def test_average_accuracy_with_multiple_samples(self):
+        gt = np.zeros((2, 1, 21))
+        gt[0, 0, :] = np.arange(21)
+        gt[1, 0, :] = (np.arange(21) + 1) % 21
+        gt = tf.constant(gt)
+
+        preds = np.zeros((2, 1, 21, 21))
+        for i in range(21):
+            preds[:, 0, i, i] = 1.0
+        preds = tf.constant(preds)
+
+        with self.test_session() as sess:
+            computed_accuracy = sess.run(average_accuracy(gt, preds))
+
+            self.assertAlmostEqual(0.5, computed_accuracy)
+
+    def test_average_accuracy_with_ignore_pixels(self):
+        pass
 
 
 if __name__ == '__main__':
