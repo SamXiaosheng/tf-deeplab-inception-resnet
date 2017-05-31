@@ -37,6 +37,14 @@ class LabelsTest(tf.test.TestCase):
 
                 self.assertAllEqual(labeled, expected)
 
+    def test_tensor_reverse_conversion(self):
+        with self.test_session() as sess:
+            for label in labels.Labels:
+                labeled = np.array(labels.index_of_label(label)).reshape((1, 1, 1))
+                expected = np.array(labels.color_of_label(label)).reshape((1, 1, 1, 3))
+                img = sess.run(labels.to_images(tf.constant(labeled)))
+
+                self.assertAllEqual(img, expected)
 
 if __name__ == '__main__':
     tf.test.main()

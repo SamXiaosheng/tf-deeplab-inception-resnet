@@ -81,3 +81,25 @@ def to_labels(tensor, scope="ToLabels"):
             labeled_tensor = tf.where(mask, index * tf.ones_like(labeled_tensor), labeled_tensor)
 
         return labeled_tensor
+
+def _image_layers(shape):
+    layers = []
+    for _ in range(3):
+        layers.append(255.0 * tf.ones([ shape[0], shape[1], shape[2] ], dtype=tf.float32))
+
+    return layers
+
+def to_images(tensor, scope="ToImage"):
+    with tf.name_scope(scope):
+        r_layer, g_layer, b_layer = _image_layers(tensor.shape)
+
+        for label in Labels:
+            index = index_of_label(label)
+            r, g, b = color_of_label(label)
+            mask = tf.equal(tensor, index)
+
+            r_layer = tf.where(mask, r * tf.ones_like(r_layer), r_layer)
+            g_layer = tf.where(mask, g * tf.ones_like(g_layer), g_layer)
+            b_layer = tf.where(mask, b * tf.ones_like(b_layer), b_layer)
+
+        return tf.stack([ r_layer, g_layer, b_layer ], axis=3)
