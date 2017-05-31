@@ -21,10 +21,6 @@ from training import average_accuracy
 # Expected Accuracy (20) = 0 / (0 + 0 + 1) = 0%
 # Avg = 55.33%
 
-
-
-
-
 def create_gt():
     gt = np.zeros((1, 2, 2))
     gt[0, 0, 0] = 0
@@ -36,6 +32,10 @@ def create_gt():
 
 def create_preds():
     preds = np.zeros((1, 2, 2, NumClasses))
+    preds[0, 0, 0, 0] = 1.0
+    preds[0, 0, 1, 1] = 1.0
+    preds[0, 1, 0, 1] = 1.0
+    preds[0, 1, 1, 1] = 1.0
 
     return tf.constant(preds)
 
@@ -43,7 +43,7 @@ class TrainingTest(tf.test.TestCase):
     def test_average_accuracy_true_positive(self):
         gt = create_gt()
         preds = create_preds()
-        expected_accuracy = 0.5533333333333333333
+        expected_accuracy = (19 + (2/3) + 0) / NumClasses
 
         with self.test_session() as sess:
             computed_accuracy = sess.run(average_accuracy(gt, preds))
