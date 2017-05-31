@@ -49,5 +49,18 @@ class TrainingTest(tf.test.TestCase):
             computed_accuracy = sess.run(average_accuracy(gt, preds))
             self.assertAlmostEqual(computed_accuracy, expected_accuracy)
 
+    def test_average_accuracy_false_negative(self):
+        gt = tf.constant(np.array([1]).reshape((1, 1, 1)))
+        p = np.zeros((1, 1, 1, NumClasses))
+        p[0, 0, 0, 0] = 1
+        preds = tf.constant(p)
+        expected_accuracy = 19 / 21
+
+        with self.test_session() as sess:
+            computed_accuracy = sess.run(average_accuracy(gt, preds))
+
+            self.assertAlmostEqual(expected_accuracy, computed_accuracy)
+
+
 if __name__ == '__main__':
     tf.test.main()
