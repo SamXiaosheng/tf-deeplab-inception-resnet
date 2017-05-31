@@ -46,7 +46,7 @@ class LabelsTest(tf.test.TestCase):
 
                 self.assertAllEqual(img, expected)
 
-    def test_binective_behavior(self):
+    def test_bijective_behavior(self):
         imgs = 255.0 * np.ones((4, 2, 2, 3))
         for i in range(3):
             imgs[i, :, :, :] = labels.color_of_index(i)
