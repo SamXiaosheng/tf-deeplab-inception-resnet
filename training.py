@@ -12,11 +12,24 @@ sys.path.extend([ LIB_DIR ])
 import tensorflow as tf
 import deeplab
 
+from pipeline import PipelineManager
+
 os.system("rm %s" % (os.path.join(OUT_DIR, "*")))
 
 with tf.Session() as sess:
-    imgs = tf.placeholder(tf.float32, shape=[None, 299, 299, 3])
-    net = deeplab.network(imgs)
+    manager = PipelineManager("/root/tf-deeplab-inception-resnet/DATA", "dev.txt")
+    q = manager.create_queues()
+
+    manager.start_queues(sess)
+
+    for i in range(10):
+        print(i, sess.run(q.dequeue()))
+
+#     imgs = tf.placeholder(tf.float32, shape=[None, 299, 299, 3])
+#     net = deeplab.network(imgs)
+
+
+    manager.stop_queues()
 
     summary_writer = tf.summary.FileWriter(OUT_DIR, graph=sess.graph)
     summary_writer.flush()
