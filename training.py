@@ -20,10 +20,13 @@ with tf.Session() as sess:
     manager = PipelineManager("/root/tf-deeplab-inception-resnet/DATA", "dev.txt")
     q = manager.create_queues()
 
+    # deq = q.dequeue_up_to(1, name="FizzyPoof")
+    deq = q.dequeue(name="FizzyPoof")
+
     manager.start_queues(sess)
 
-    for i in range(10):
-        print(i, sess.run(q.dequeue()))
+    for i in range(1000):
+        print(i, sess.run(deq))
 
 #     imgs = tf.placeholder(tf.float32, shape=[None, 299, 299, 3])
 #     net = deeplab.network(imgs)

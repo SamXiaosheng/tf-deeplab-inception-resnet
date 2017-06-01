@@ -8,6 +8,11 @@ import tensorflow as tf
 def assert_dir_exists(dirname):
     assert os.path.exists(dirname), "Dir: %s does not exist!" % (dirname)
 
+def create_paths(name, img_path, seg_path):
+    img_filename = tf.constant(img_path + "/") + name + tf.constant(".jpg")
+    seg_filename = tf.constant(seg_path + "/") + name + tf.constant(".png")
+
+    return [ img_filename, seg_filename ]
 
 class PipelineManager(object):
     DirImageSets = "ImageSets/Segmentation"
@@ -43,14 +48,15 @@ class PipelineManager(object):
             cases = [ line.strip() for line in f ]
 
         case_name_queue = tf.train.string_input_producer(tf.constant(cases, name="case_names"),
-            shuffle=True, capacity=len(cases), name="ImageFilenameQueue")
+            shuffle=True, capacity=len(cases), name="CaseNameQueue")
 
-        # case_name_queue = tf.FIFOQueue(PipelineManager.Capacity,
-        #     dtypes=[tf.string], name="CaseNameQueue")
-        #
-        # case_name_queue.enqueue_many(tf.constant(cases, name="cases"))
-        #
-        # qr = tf.train.QueueRunner(queue=case_name_queue)
-        # tf.train.add_queue_runner(qr)
+        path_name_queue = tf.FIFOQueue(len(cases), dtypes=[tf.string, tf.string],
+            shapes=[[], []], name="ImagePathQueue")
 
-        return case_name_queue
+        enqueue_op = path_name_queue.enqueue(
+            create_paths(case_name_queue.dequeue(), self.dir_jpeg_images, self.dir_segmentations))
+
+        qr = tf.train.QueueRunner(queue=path_name_queue, enqueue_ops=[enqueue_op])
+        tf.train.add_queue_runner(qr)
+
+        return path_name_queue
