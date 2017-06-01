@@ -9,8 +9,12 @@ def assert_dir_exists(dirname):
     assert os.path.exists(dirname), "Dir: %s does not exist!" % (dirname)
 
 def create_paths(name, img_path, seg_path):
-    img_filename = tf.constant(img_path + "/") + name + tf.constant(".jpg")
-    seg_filename = tf.constant(seg_path + "/") + name + tf.constant(".png")
+    with tf.name_scope("PathCreator"):
+        with tf.name_scope("ImagePath"):
+            img_filename = tf.constant(img_path + "/") + name + tf.constant(".jpg")
+
+        with tf.name_scope("GroundTruthPath"):
+            seg_filename = tf.constant(seg_path + "/") + name + tf.constant(".png")
 
     return [ img_filename, seg_filename ]
 
@@ -31,9 +35,9 @@ class PipelineManager(object):
 
     def create_queues(self):
         with tf.name_scope("Pipeline"):
-            case_name_queue = self._case_name_queue()
+            path_name_queue = self._path_name_queue()
 
-            return case_name_queue
+            return path_name_queue
 
     def start_queues(self, sess):
         self.coordinator = tf.train.Coordinator()
@@ -43,7 +47,7 @@ class PipelineManager(object):
         self.coordinator.request_stop()
         self.coordinator.join(self.threads)
 
-    def _case_name_queue(self):
+    def _path_name_queue(self):
         with open(self.data_set) as f:
             cases = [ line.strip() for line in f ]
 
