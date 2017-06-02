@@ -77,7 +77,7 @@ class PipelineManager(object):
             decode_func = tf.image.decode_png
 
         with tf.name_scope(scope):
-            return tf.cast(decode_func(tf.read_file(filename)), dtype=tf.float32)
+            return tf.cast(decode_func(tf.read_file(filename), channels=3), dtype=tf.float32)
 
     def _image_tensors_queue(self, path_queue):
         paths_for_next_case = path_queue.dequeue()
