@@ -36,8 +36,9 @@ class PipelineManager(object):
     def create_queues(self):
         with tf.name_scope("Pipeline"):
             path_name_queue = self._path_name_queue()
+            image_queue = self._image_tensors_queue(path_name_queue)
 
-            return path_name_queue
+            return image_queue
 
     def start_queues(self, sess):
         self.coordinator = tf.train.Coordinator()
@@ -64,3 +65,33 @@ class PipelineManager(object):
         tf.train.add_queue_runner(qr)
 
         return path_name_queue
+
+    def _read_and_decode_image(self, paths, img_type):
+        if (img_type == 'image'):
+            scope = "ReadImageFile"
+            filename = paths[0]
+            decode_func = tf.image.decode_jpeg
+        else:
+            scope = "ReadGroundTruthFile"
+            filename = paths[1]
+            decode_func = tf.image.decode_png
+
+        with tf.name_scope(scope):
+            return tf.cast(decode_func(tf.read_file(filename)), dtype=tf.float32)
+
+    def _image_tensors_queue(self, path_queue):
+        paths_for_next_case = path_queue.dequeue()
+
+        raw_img = tf.read_file(paths_for_next_case[0], name="ReadImageFile")
+        raw_gt = tf.read_file(paths_for_next_case[1], name="ReadGroundTruthFile")
+
+        img_queue = tf.FIFOQueue(1000, [tf.float32, tf.float32], name="ImageQueue")
+        img_enqueue_op = img_queue.enqueue([
+            self._read_and_decode_image(paths_for_next_case, "image"),
+            self._read_and_decode_image(paths_for_next_case, "ground_truth")
+        ])
+
+        qr = tf.train.QueueRunner(queue=img_queue, enqueue_ops=[ img_enqueue_op ] * 2)
+        tf.train.add_queue_runner(qr)
+
+        return img_queue

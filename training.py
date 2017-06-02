@@ -25,8 +25,9 @@ with tf.Session() as sess:
 
     manager.start_queues(sess)
 
-    for i in range(1000):
-        print(i, sess.run(deq))
+    for i in range(10):
+        img, gt = sess.run(deq)
+        print(i, img.shape, gt.shape)
 
 #     imgs = tf.placeholder(tf.float32, shape=[None, 299, 299, 3])
 #     net = deeplab.network(imgs)
