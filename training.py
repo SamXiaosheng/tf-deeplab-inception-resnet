@@ -9,6 +9,7 @@ OUT_DIR = "/tmp/deeplab"
 LIB_DIR = os.path.abspath("./lib")
 sys.path.extend([ LIB_DIR ])
 
+import numpy as np
 import tensorflow as tf
 import deeplab
 
@@ -17,21 +18,21 @@ from pipeline import PipelineManager
 os.system("rm %s" % (os.path.join(OUT_DIR, "*")))
 
 with tf.Session() as sess:
-    manager = PipelineManager("/root/tf-deeplab-inception-resnet/DATA", "dev.txt")
-    q = manager.create_queues()
 
-    # deq = q.dequeue_up_to(1, name="FizzyPoof")
-    deq = q.dequeue(name="FizzyPoof")
 
+    manager = PipelineManager("/root/tf-deeplab-inception-resnet/DATA", "dev2.txt")
+    img_queue = manager.create_queues()
     manager.start_queues(sess)
 
-    for i in range(10):
-        img, gt = sess.run(deq)
-        print(i, img.shape, gt.shape)
+    image_batch, ground_truth_batch = img_queue.dequeue_up_to(2, name="ImageBatchDequeue")
+    net = deeplab.network(image_batch)
 
-#     imgs = tf.placeholder(tf.float32, shape=[None, 299, 299, 3])
-#     net = deeplab.network(imgs)
+    sess.run([ tf.local_variables_initializer(), tf.global_variables_initializer() ])
 
+    for i in range(1):
+        # img, gt = sess.run([ image_batch, ground_truth_batch])
+        # print(i, img.shape, gt.shape)
+        print(">>", sess.run(net))
 
     manager.stop_queues()
 

@@ -24,8 +24,9 @@ class PipelineManager(object):
     DirSegmentationClass = "SegmentationClass"
     Capacity = 1000
 
-    def __init__(self, root, data_set):
+    def __init__(self, root, data_set, target_size=[350, 500]):
         self.root = root
+        self.target_size = target_size
         self.dir_image_sets = os.path.join(root, PipelineManager.DirImageSets)
         self.dir_jpeg_images = os.path.join(root, PipelineManager.DirJPEGImages)
         self.dir_segmentations = os.path.join(root, PipelineManager.DirSegmentationClass)
@@ -77,7 +78,8 @@ class PipelineManager(object):
             decode_func = tf.image.decode_png
 
         with tf.name_scope(scope):
-            return tf.cast(decode_func(tf.read_file(filename), channels=3), dtype=tf.float32)
+            return tf.image.resize_images(decode_func(tf.read_file(filename), channels=3),
+                self.target_size)
 
     def _image_tensors_queue(self, path_queue):
         paths_for_next_case = path_queue.dequeue()
@@ -85,7 +87,10 @@ class PipelineManager(object):
         raw_img = tf.read_file(paths_for_next_case[0], name="ReadImageFile")
         raw_gt = tf.read_file(paths_for_next_case[1], name="ReadGroundTruthFile")
 
-        img_queue = tf.FIFOQueue(1000, [tf.float32, tf.float32], name="ImageQueue")
+        shape = self.target_size + [3]
+        img_queue = tf.FIFOQueue(1000, [tf.float32, tf.float32],
+            shapes=[shape, shape], name="ImageQueue")
+
         img_enqueue_op = img_queue.enqueue([
             self._read_and_decode_image(paths_for_next_case, "image"),
             self._read_and_decode_image(paths_for_next_case, "ground_truth")
