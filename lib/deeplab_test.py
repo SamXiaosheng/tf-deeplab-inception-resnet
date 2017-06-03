@@ -17,9 +17,14 @@ class DeeplabTest(tf.test.TestCase):
         self.assertListEqual(atrous.get_shape().as_list(), [NUM_BATCH, 35, 35, NUM_CLASSES])
 
     def testNetwork(self):
-        images = tf.placeholder(tf.float32, [10, 299, 299, 3])
+        images = tf.placeholder(tf.float32, [NUM_BATCH, 299, 299, 3])
         deeplab_net = network(images, num_classes=NUM_CLASSES)
         self.assertListEqual(deeplab_net.get_shape().as_list(), [10, 35, 35, NUM_CLASSES])
+
+    def testNetworkWithLargeImages(self):
+        images = tf.placeholder(tf.float32, [NUM_BATCH, 350, 500, 3])
+        deeplab_net = network(images, num_classes=NUM_CLASSES)
+        self.assertListEqual(deeplab_net.get_shape().as_list(), [10, 41, 60, NUM_CLASSES])
 
 if __name__ == "__main__":
     tf.test.main()
