@@ -67,33 +67,26 @@ class PipelineManager(object):
 
         return path_name_queue
 
-    def _read_and_decode_image(self, paths, img_type):
-        if (img_type == 'image'):
-            scope = "ReadImageFile"
-            filename = paths[0]
-            decode_func = tf.image.decode_jpeg
-        else:
-            scope = "ReadGroundTruthFile"
-            filename = paths[1]
-            decode_func = tf.image.decode_png
-
+    def _read_and_decode_image(self, path, decoder, size, scope="ImageFile"):
         with tf.name_scope(scope):
-            return tf.image.resize_images(decode_func(tf.read_file(filename), channels=3),
-                self.target_size)
+            img = decoder(tf.read_file(path), channels=3)
+            resized = tf.image.resize_images(img, size,
+                method=tf.image.ResizeMethod.NEAREST_NEIGHBOR)
+
+            return tf.cast(resized, dtype=tf.float32)
 
     def _image_tensors_queue(self, path_queue):
-        paths_for_next_case = path_queue.dequeue()
+        paths = path_queue.dequeue()
 
-        raw_img = tf.read_file(paths_for_next_case[0], name="ReadImageFile")
-        raw_gt = tf.read_file(paths_for_next_case[1], name="ReadGroundTruthFile")
-
-        shape = self.target_size + [3]
+        img_shape = self.target_size + [3]
         img_queue = tf.FIFOQueue(1000, [tf.float32, tf.float32],
-            shapes=[shape, shape], name="ImageQueue")
+            shapes=[img_shape, img_shape], name="ImageQueue")
 
         img_enqueue_op = img_queue.enqueue([
-            self._read_and_decode_image(paths_for_next_case, "image"),
-            self._read_and_decode_image(paths_for_next_case, "ground_truth")
+            self._read_and_decode_image(paths[0], tf.image.decode_jpeg, self.target_size,
+                scope="ReadImageFile"),
+            self._read_and_decode_image(paths[1], tf.image.decode_png, self.target_size,
+                scope="ReadGroundTruthFile")
         ])
 
         qr = tf.train.QueueRunner(queue=img_queue, enqueue_ops=[ img_enqueue_op ] * 2)
