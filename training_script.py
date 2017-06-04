@@ -33,11 +33,15 @@ with tf.Session() as sess:
     resized_preds = tf.image.resize_images(preds, TARGET_SIZE, method=tf.image.ResizeMethod.BILINEAR)
     avg_accuracy = average_accuracy(to_labels(ground_truth_batch), resized_preds)
 
+    train_step = tf.train.MomentumOptimizer(0.001, 0.9).minimize(1 - avg_accuracy)
+
     sess.run([ tf.local_variables_initializer(), tf.global_variables_initializer() ])
 
-    for i in range(1):
-        foo = sess.run(avg_accuracy)
-        print("FOO", foo)
+    for i in range(100000):
+        acc, _ = sess.run([ avg_accuracy, train_step ])
+
+        if (i % 100 == 0):
+            print("Accuracy = %7.3f" % (100 * acc))
 
 
 
