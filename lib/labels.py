@@ -70,7 +70,7 @@ def color_of_index(ind):
 def to_labels(tensor, scope="ToLabels"):
     with tf.name_scope(scope):
         shape = tensor.shape
-        labeled_tensor = MaxInt8 * tf.ones([shape[0], shape[1], shape[2]], dtype=tf.int8)
+        labeled_tensor = MaxInt8 * tf.ones_like(tensor, dtype=tf.int8)[:, :, :, 0]
 
         for label in Labels:
             opname = "Mask_%s" % (label)
