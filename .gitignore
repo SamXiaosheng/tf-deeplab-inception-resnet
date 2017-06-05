@@ -3,3 +3,4 @@
 *.pyc
 *.log
 DATA/
+node_modules
