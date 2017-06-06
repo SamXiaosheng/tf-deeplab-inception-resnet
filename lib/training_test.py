@@ -6,7 +6,7 @@ import numpy as np
 import tensorflow as tf
 
 from labels import IgnoreLabel, NumClasses
-from training import average_accuracy
+from training import average_accuracy, cross_entropy
 
 # GT
 # 0  1
@@ -92,6 +92,19 @@ class TrainingTest(tf.test.TestCase):
 
             self.assertAlmostEqual(1.0, computed_accuracy)
 
+    def test_cross_entropy(self):
+        gt = np.zeros((1, 1, 1))
+        gt = tf.constant(gt)
+
+        preds = np.zeros((1, 1, 1, 21))
+        preds[0, 0, 0, 0] = 0.5
+        preds[0, 0, 0, 1] = 0.5
+        preds = tf.constant(preds)
+
+        with self.test_session() as sess:
+            computed_xentropy = sess.run(cross_entropy(gt, preds))
+
+            self.assertAlmostEqual(-np.log(0.5), computed_xentropy)
 
 if __name__ == '__main__':
     tf.test.main()

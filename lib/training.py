@@ -41,3 +41,6 @@ def average_accuracy(gt, preds):
             avg_acc += _avg_label_accuracy(label, gt, predictions)
 
         return avg_acc  / len(Labels)
+
+def cross_entropy(gt, preds):
+    pass
