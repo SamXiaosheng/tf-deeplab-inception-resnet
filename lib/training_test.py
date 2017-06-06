@@ -94,15 +94,16 @@ class TrainingTest(tf.test.TestCase):
 
     def test_cross_entropy(self):
         gt = np.zeros((1, 1, 1))
-        gt = tf.constant(gt)
+        gt[0, 0, 0] = 1
+        gt = tf.constant(gt, dtype=tf.int32)
 
-        preds = np.zeros((1, 1, 1, 21))
-        preds[0, 0, 0, 0] = 0.5
-        preds[0, 0, 0, 1] = 0.5
-        preds = tf.constant(preds)
+        logits = -1000.0 * np.ones((1, 1, 1, 21))
+        logits[0, 0, 0, 0] = 0.0
+        logits[0, 0, 0, 1] = 0.0
+        logits = tf.constant(logits)
 
         with self.test_session() as sess:
-            computed_xentropy = sess.run(cross_entropy(gt, preds))
+            computed_xentropy = sess.run(cross_entropy(gt, logits))
 
             self.assertAlmostEqual(-np.log(0.5), computed_xentropy)
 
