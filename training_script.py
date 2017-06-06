@@ -22,7 +22,7 @@ os.system("rm %s" % (os.path.join(OUT_DIR, "*")))
 
 with tf.Session() as sess:
     summary_writer = tf.summary.FileWriter(OUT_DIR, graph=sess.graph)
-    manager = PipelineManager("/mnt/hdd0/datasets/pascal/VOCdevkit/VOC2012", "dev.txt",
+    manager = PipelineManager("/root/tf-deeplab-inception-resnet/DATA", "dev2.txt",
         target_size=TARGET_SIZE)
 
     img_queue = manager.create_queues()
@@ -32,8 +32,9 @@ with tf.Session() as sess:
     preds = deeplab.network(image_batch)
     resized_preds = tf.image.resize_images(preds, TARGET_SIZE, method=tf.image.ResizeMethod.BILINEAR)
     avg_accuracy = average_accuracy(to_labels(ground_truth_batch), resized_preds)
+    avg_error = 1.0 - avg_accuracy
 
-    train_step = tf.train.MomentumOptimizer(0.001, 0.9).minimize(1 - avg_accuracy)
+    train_step = tf.train.MomentumOptimizer(0.001, 0.9).minimize(tf.reduce_sum(preds))
 
     sess.run([ tf.local_variables_initializer(), tf.global_variables_initializer() ])
 
