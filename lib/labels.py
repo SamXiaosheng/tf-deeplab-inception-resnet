@@ -67,7 +67,7 @@ def color_of_label(label):
 def color_of_index(ind):
     return Colormap[ind, :]
 
-def to_preds(tensor, scope="ToPreds"):
+def to_one_hot(tensor, scope="ToOneHot"):
     with tf.name_scope(scope):
         return tf.one_hot(tensor, NumClasses)
 

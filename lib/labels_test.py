@@ -58,7 +58,7 @@ class LabelsTest(tf.test.TestCase):
 
             self.assertAllClose(converted_imgs, imgs)
 
-    def test_to_preds(self):
+    def test_to_one_hot(self):
         with self.test_session() as sess:
             for label in labels.Labels:
                 idx = labels.index_of_label(label)
@@ -66,8 +66,8 @@ class LabelsTest(tf.test.TestCase):
                 expected = np.zeros((1, 1, 1, 21))
                 expected[0, 0, 0, idx] = 1.0
 
-                preds = sess.run(labels.to_preds(tf.constant(labeled)))
-                self.assertAllEqual(preds, expected)
+                one_hot = sess.run(labels.to_one_hot(tf.constant(labeled)))
+                self.assertAllEqual(one_hot, expected)
 
 if __name__ == '__main__':
     tf.test.main()
