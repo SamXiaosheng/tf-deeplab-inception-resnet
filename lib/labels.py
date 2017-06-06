@@ -73,7 +73,7 @@ def to_one_hot(tensor, scope="ToOneHot"):
 
 def to_labels(tensor, scope="ToLabels"):
     with tf.name_scope(scope):
-        labeled_tensor = IgnoreLabel * tf.ones_like(tensor, dtype=tf.int8)[:, :, :, 0]
+        labeled_tensor = IgnoreLabel * tf.ones_like(tensor, dtype=tf.int32)[:, :, :, 0]
 
         for label in Labels:
             opname = "Mask_%s" % (label)

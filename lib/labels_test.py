@@ -37,6 +37,14 @@ class LabelsTest(tf.test.TestCase):
 
                 self.assertAllEqual(labeled, expected)
 
+    def test_to_labels_returns_appropriate_dtype(self):
+        gt_image = np.array(labels.color_of_label("bus")).reshape((1, 1, 1, 3))
+        labeled_image = labels.to_labels(tf.constant(gt_image))
+
+        self.assertTrue(labeled_image.dtype == tf.int32)
+
+
+
     def test_tensor_reverse_conversion(self):
         with self.test_session() as sess:
             for label in labels.Labels:
