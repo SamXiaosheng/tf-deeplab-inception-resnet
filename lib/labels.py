@@ -5,7 +5,7 @@ from __future__ import print_function
 import numpy as np
 import tensorflow as tf
 
-MaxInt8 = np.iinfo(np.int8).max # Magic pixel value to ignore
+IgnoreLabel = -1
 
 Labels = [
     "background",
@@ -70,11 +70,10 @@ def color_of_index(ind):
 def to_preds(tensor, scope="ToPreds"):
     with tf.name_scope(scope):
         return tf.one_hot(tensor, NumClasses)
-        pass
 
 def to_labels(tensor, scope="ToLabels"):
     with tf.name_scope(scope):
-        labeled_tensor = MaxInt8 * tf.ones_like(tensor, dtype=tf.int8)[:, :, :, 0]
+        labeled_tensor = IgnoreLabel * tf.ones_like(tensor, dtype=tf.int8)[:, :, :, 0]
 
         for label in Labels:
             opname = "Mask_%s" % (label)
