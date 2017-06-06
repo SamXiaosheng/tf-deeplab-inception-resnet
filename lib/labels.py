@@ -67,6 +67,11 @@ def color_of_label(label):
 def color_of_index(ind):
     return Colormap[ind, :]
 
+def to_preds(tensor, scope="ToPreds"):
+    with tf.name_scope(scope):
+        return tf.one_hot(tensor, NumClasses)
+        pass
+
 def to_labels(tensor, scope="ToLabels"):
     with tf.name_scope(scope):
         labeled_tensor = MaxInt8 * tf.ones_like(tensor, dtype=tf.int8)[:, :, :, 0]
