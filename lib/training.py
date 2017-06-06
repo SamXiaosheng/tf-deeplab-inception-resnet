@@ -3,7 +3,7 @@ from __future__ import division
 from __future__ import print_function
 
 import tensorflow as tf
-from labels import IgnoreLabel, Labels, index_of_label, to_one_hot
+from labels import IgnoreLabel, Labels, index_of_label, to_one_hot, NumClasses
 
 def _sum(tensor):
     return tf.reduce_sum(tf.cast(tensor, dtype=tf.int64), axis=[1, 2])
@@ -42,6 +42,7 @@ def average_accuracy(gt, preds):
 
         return avg_acc  / len(Labels)
 
-def cross_entropy(gt, preds):
+def cross_entropy(gt, logits):
     with tf.name_scope("CrossEntropy"):
-        return tf.nn.sparse_softmax_cross_entropy_with_logits(labels=gt, logits=preds)
+        return tf.reduce_mean(
+            tf.nn.sparse_softmax_cross_entropy_with_logits(labels=gt, logits=logits))

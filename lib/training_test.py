@@ -93,13 +93,13 @@ class TrainingTest(tf.test.TestCase):
             self.assertAlmostEqual(1.0, computed_accuracy)
 
     def test_cross_entropy(self):
-        gt = np.zeros((1, 1, 1))
-        gt[0, 0, 0] = 1
+        gt = np.zeros((2, 1, 1))
+        gt[:, 0, 0] = 1
         gt = tf.constant(gt, dtype=tf.int32)
 
-        logits = -1000.0 * np.ones((1, 1, 1, 21))
-        logits[0, 0, 0, 0] = 0.0
-        logits[0, 0, 0, 1] = 0.0
+        logits = -1000.0 * np.ones((2, 1, 1, 21))
+        logits[:, 0, 0, 0] = 0.0
+        logits[:, 0, 0, 1] = 0.0
         logits = tf.constant(logits)
 
         with self.test_session() as sess:
