@@ -33,13 +33,14 @@ def create_and_start_queues():
     return manager, image_batch, ground_truth_batch
 
 def create_image_summaries(imgs, gt, predicted):
-    im_summ = tf.summary.image("Image", imgs[0:2, :, :, :])
-    gt_summ = tf.summary.image("GroundTruth", gt[0:2, :, :, :])
+    with tf.name_scope("ImageSummaries"):
+        im_summ = tf.summary.image("Image", imgs[0:2, :, :, :])
+        gt_summ = tf.summary.image("GroundTruth", gt[0:2, :, :, :])
 
-    pred_imgs = to_images(tf.argmax(predicted))
-    pred_summ = tf.summary.image("Prediction", pred_imgs[0:2, :, :, :])
+        pred_imgs = to_images(tf.argmax(predicted, axis=3))
+        pred_summ = tf.summary.image("Prediction", pred_imgs[0:2, :, :, :])
 
-    return [ im_summ, gt_summ, pred_summ ]
+        return [ im_summ, gt_summ, pred_summ ]
 
 with tf.Session() as sess:
     summary_writer = tf.summary.FileWriter(OUT_DIR, graph=sess.graph)
@@ -53,7 +54,6 @@ with tf.Session() as sess:
         method=tf.image.ResizeMethod.BILINEAR)
 
     avg_accuracy = average_accuracy(labeled_ground_truth, resized_preds)
-
     xentropy = cross_entropy(labeled_ground_truth, resized_preds)
     train_step = tf.train.MomentumOptimizer(0.001, 0.9).minimize(xentropy)
 

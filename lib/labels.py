@@ -85,16 +85,16 @@ def to_labels(tensor, scope="ToLabels"):
 
         return labeled_tensor
 
-def _image_layers(shape):
+def _image_layers(tensor):
     layers = []
     for _ in range(3):
-        layers.append(255.0 * tf.ones([ shape[0], shape[1], shape[2] ], dtype=tf.float32))
+        layers.append(255.0 * tf.ones_like(tensor, dtype=tf.float32))
 
     return layers
 
 def to_images(tensor, scope="ToImage"):
     with tf.name_scope(scope):
-        r_layer, g_layer, b_layer = _image_layers(tensor.shape)
+        r_layer, g_layer, b_layer = _image_layers(tensor)
 
         for label in Labels:
             index = index_of_label(label)

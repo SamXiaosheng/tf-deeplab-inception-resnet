@@ -43,8 +43,6 @@ class LabelsTest(tf.test.TestCase):
 
         self.assertTrue(labeled_image.dtype == tf.int32)
 
-
-
     def test_tensor_reverse_conversion(self):
         with self.test_session() as sess:
             for label in labels.Labels:
