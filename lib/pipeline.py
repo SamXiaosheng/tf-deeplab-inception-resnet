@@ -24,9 +24,12 @@ class PipelineManager(object):
     DirSegmentationClass = "SegmentationClass"
     Capacity = 1000
 
-    def __init__(self, root, data_set, target_size=[350, 500]):
+    def __init__(self, root, data_set, target_size=[350, 500], device="/cpu:0", threads=10):
         self.root = root
         self.target_size = target_size
+        self.device = device
+        self.threads = threads
+
         self.dir_image_sets = os.path.join(root, PipelineManager.DirImageSets)
         self.dir_jpeg_images = os.path.join(root, PipelineManager.DirJPEGImages)
         self.dir_segmentations = os.path.join(root, PipelineManager.DirSegmentationClass)
@@ -35,15 +38,17 @@ class PipelineManager(object):
         [ assert_dir_exists(d) for d in [self.dir_image_sets, self.dir_jpeg_images, self.dir_segmentations, self.data_set] ]
 
     def create_queues(self):
-        with tf.name_scope("Pipeline"):
-            path_name_queue = self._path_name_queue()
-            image_queue = self._image_tensors_queue(path_name_queue)
+        with tf.device(self.device):
+            with tf.name_scope("Pipeline"):
+                path_name_queue = self._path_name_queue()
+                image_queue = self._image_tensors_queue(path_name_queue)
 
-            return image_queue
+                return image_queue
 
     def start_queues(self, sess):
-        self.coordinator = tf.train.Coordinator()
-        self.threads = tf.train.start_queue_runners(sess=sess, coord=self.coordinator)
+        with tf.device(self.device):
+            self.coordinator = tf.train.Coordinator()
+            self.threads = tf.train.start_queue_runners(sess=sess, coord=self.coordinator)
 
     def stop_queues(self):
         self.coordinator.request_stop()
@@ -87,7 +92,7 @@ class PipelineManager(object):
                 scope="ReadImageFile"),
             self._read_and_decode_image(paths[1], tf.image.decode_png, self.target_size,
                 scope="ReadGroundTruthFile")
-        ])
+        ] * self.threads)
 
         qr = tf.train.QueueRunner(queue=img_queue, enqueue_ops=[ img_enqueue_op ] * 2)
         tf.train.add_queue_runner(qr)

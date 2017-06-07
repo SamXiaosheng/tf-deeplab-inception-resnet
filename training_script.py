@@ -17,21 +17,23 @@ from training import average_accuracy, cross_entropy
 from labels import to_labels
 
 TARGET_SIZE = [350, 500]
+BATCH_SIZE = 10
 
 os.system("rm %s" % (os.path.join(OUT_DIR, "*")))
 
 with tf.Session() as sess:
     summary_writer = tf.summary.FileWriter(OUT_DIR, graph=sess.graph)
-    manager = PipelineManager("/mnt/hdd0/datasets/pascal/VOCdevkit/VOC2012", "dev.txt",
-        target_size=TARGET_SIZE)
+    manager = PipelineManager("/mnt/hdd0/datasets/pascal/VOCdevkit/VOC2012", "train.txt",
+        target_size=TARGET_SIZE, device="/cpu:0", threads=20)
 
     img_queue = manager.create_queues()
     manager.start_queues(sess)
 
-    image_batch, ground_truth_batch = img_queue.dequeue_up_to(2, name="ImageBatchDequeue")
+    image_batch, ground_truth_batch = img_queue.dequeue_up_to(BATCH_SIZE,  name="ImageBatchDequeue")
     preds = deeplab.network(image_batch)
     labeled_ground_truth = to_labels(ground_truth_batch)
-    resized_preds = tf.image.resize_images(preds, TARGET_SIZE, method=tf.image.ResizeMethod.BILINEAR)
+    resized_preds = tf.image.resize_images(preds, TARGET_SIZE,
+        method=tf.image.ResizeMethod.BILINEAR)
 
     xentropy = cross_entropy(labeled_ground_truth, resized_preds)
     avg_accuracy = average_accuracy(labeled_ground_truth, resized_preds)
@@ -42,7 +44,7 @@ with tf.Session() as sess:
     for i in range(100000):
         acc, _ = sess.run([ avg_accuracy, train_step ])
 
-        if (i % 100 == 0):
+        if (i % 1 == 0):
             print("Accuracy = %7.3f" % (100 * acc))
 
 
@@ -59,5 +61,4 @@ with tf.Session() as sess:
         # summary_writer.add_summary(nr_summ, i)
 
     manager.stop_queues()
-
     summary_writer.flush()
