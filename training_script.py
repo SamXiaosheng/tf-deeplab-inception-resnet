@@ -14,15 +14,14 @@ import deeplab
 
 from pipeline import PipelineManager
 from training import average_accuracy, cross_entropy
-from labels import to_labels
+from labels import to_labels, to_images
 
 TARGET_SIZE = [350, 500]
 BATCH_SIZE = 10
 
 os.system("rm %s" % (os.path.join(OUT_DIR, "*")))
 
-with tf.Session() as sess:
-    summary_writer = tf.summary.FileWriter(OUT_DIR, graph=sess.graph)
+def create_and_start_queues():
     manager = PipelineManager("/mnt/hdd0/datasets/pascal/VOCdevkit/VOC2012", "train.txt",
         target_size=TARGET_SIZE, device="/cpu:0", threads=20)
 
@@ -30,35 +29,45 @@ with tf.Session() as sess:
     manager.start_queues(sess)
 
     image_batch, ground_truth_batch = img_queue.dequeue_up_to(BATCH_SIZE,  name="ImageBatchDequeue")
+
+    return manager, image_batch, ground_truth_batch
+
+def create_image_summaries(imgs, gt, predicted):
+    im_summ = tf.summary.image("Image", imgs[0:2, :, :, :])
+    gt_summ = tf.summary.image("GroundTruth", gt[0:2, :, :, :])
+
+    pred_imgs = to_images(tf.argmax(predicted))
+    pred_summ = tf.summary.image("Prediction", pred_imgs[0:2, :, :, :])
+
+    return [ im_summ, gt_summ, pred_summ ]
+
+with tf.Session() as sess:
+    summary_writer = tf.summary.FileWriter(OUT_DIR, graph=sess.graph)
+
+    manager, image_batch, ground_truth_batch = create_and_start_queues()
+
     preds = deeplab.network(image_batch)
+
     labeled_ground_truth = to_labels(ground_truth_batch)
     resized_preds = tf.image.resize_images(preds, TARGET_SIZE,
         method=tf.image.ResizeMethod.BILINEAR)
 
-    xentropy = cross_entropy(labeled_ground_truth, resized_preds)
     avg_accuracy = average_accuracy(labeled_ground_truth, resized_preds)
+
+    xentropy = cross_entropy(labeled_ground_truth, resized_preds)
     train_step = tf.train.MomentumOptimizer(0.001, 0.9).minimize(xentropy)
+
+    img_summaries = create_image_summaries(image_batch, ground_truth_batch, resized_preds)
 
     sess.run([ tf.local_variables_initializer(), tf.global_variables_initializer() ])
 
     for i in range(100000):
         acc, _ = sess.run([ avg_accuracy, train_step ])
 
-        if (i % 1 == 0):
+        if (i % 100 == 0):
             print("Accuracy = %7.3f" % (100 * acc))
-
-
-
-        # n, nr = sess.run([ net, net_resized ])
-        # img, gt = sess.run([ image_batch, ground_truth_batch])
-        # print(i, img.shape, gt.shape)
-        # xx = sess.run(ground_truth_batch)
-        # print(">>", xx.shape)
-        # print(np.unique(xx))
-
-        # img_summ = sess.run(tf.summary.image("GroundTruth", ground_truth_batch))
-        # summary_writer.add_summary(n_summ, i)
-        # summary_writer.add_summary(nr_summ, i)
+            for summary in sess.run(img_summaries):
+                summary_writer.add_summary(summary, i)
 
     manager.stop_queues()
     summary_writer.flush()
