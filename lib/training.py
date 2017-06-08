@@ -44,5 +44,13 @@ def average_accuracy(gt, preds):
 
 def cross_entropy(gt, logits):
     with tf.name_scope("CrossEntropy"):
-        return tf.reduce_mean(
-            tf.nn.sparse_softmax_cross_entropy_with_logits(labels=gt, logits=logits))
+        raw_xentropy = tf.nn.sparse_softmax_cross_entropy_with_logits(labels=gt, logits=logits)
+        not_nan = tf.logical_not(tf.is_nan(raw_xentropy))
+
+        mask_ones = tf.ones_like(raw_xentropy)
+        mask_zeros = tf.zeros_like(raw_xentropy)
+
+        xentropy = tf.reduce_sum(tf.where(not_nan, raw_xentropy, mask_zeros))
+        xentropy /= tf.reduce_sum(tf.where(not_nan, mask_ones, mask_zeros))
+
+        return xentropy
