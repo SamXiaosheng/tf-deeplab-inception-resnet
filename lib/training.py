@@ -48,7 +48,7 @@ def cross_entropy(gt, logits):
     # will yield NaNs on the GPU (and exceptions if run on the CPU) which need to be ignored.
     # See: https://www.tensorflow.org/api_docs/python/tf/nn/sparse_softmax_cross_entropy_with_logits
     with tf.name_scope("CrossEntropy"):
-        raw_xentropy = tf.nn.sparse_softmax_cross_entropy_with_logits(labels=gt, logits=logits)
+        raw_xentropy = tf.losses.sparse_softmax_cross_entropy(labels=gt, logits=logits)
         not_nan = tf.logical_not(tf.is_nan(raw_xentropy))
 
         mask_ones = tf.ones_like(raw_xentropy)
