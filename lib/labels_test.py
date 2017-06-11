@@ -53,7 +53,7 @@ class LabelsTest(tf.test.TestCase):
                 self.assertAllEqual(img, expected)
 
     def test_bijective_behavior(self):
-        imgs = 255.0 * np.ones((4, 2, 2, 3))
+        imgs = 255.0 * np.ones((3, 2, 2, 3))
         for i in range(3):
             imgs[i, :, :, :] = labels.color_of_index(i)
 
@@ -63,6 +63,16 @@ class LabelsTest(tf.test.TestCase):
             converted_imgs = sess.run(converted)
 
             self.assertAllClose(converted_imgs, imgs)
+
+    def test_ignore_pixels_handled(self):
+        imgs = 255.0 * np.ones((1, 2, 2, 3))
+        expected = labels.IgnoreLabel * np.ones((1, 2, 2))
+
+        with self.test_session() as sess:
+            labeled = labels.to_labels(tf.constant(imgs))
+            labeled = sess.run(labeled)
+
+            self.assertAllClose(expected, labeled)
 
     def test_to_one_hot(self):
         with self.test_session() as sess:

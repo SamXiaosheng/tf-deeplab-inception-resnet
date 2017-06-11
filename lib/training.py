@@ -43,18 +43,8 @@ def average_accuracy(gt, preds):
         return avg_acc  / len(Labels)
 
 def cross_entropy(gt, logits):
-
-    # nb: Ignore pixels have a value of -1. Passing this into the cross_entropy_with_logits method
-    # will yield NaNs on the GPU (and exceptions if run on the CPU) which need to be ignored.
-    # See: https://www.tensorflow.org/api_docs/python/tf/nn/sparse_softmax_cross_entropy_with_logits
     with tf.name_scope("CrossEntropy"):
         raw_xentropy = tf.losses.sparse_softmax_cross_entropy(labels=gt, logits=logits)
-        not_nan = tf.logical_not(tf.is_nan(raw_xentropy))
-
-        mask_ones = tf.ones_like(raw_xentropy)
-        mask_zeros = tf.zeros_like(raw_xentropy)
-
-        xentropy = tf.reduce_sum(tf.where(not_nan, raw_xentropy, mask_zeros))
-        xentropy /= tf.reduce_sum(tf.where(not_nan, mask_ones, mask_zeros))
+        xentropy = tf.reduce_sum(raw_xentropy)
 
         return xentropy

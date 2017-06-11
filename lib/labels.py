@@ -5,7 +5,8 @@ from __future__ import print_function
 import numpy as np
 import tensorflow as tf
 
-IgnoreLabel = -1
+# Convert pixels that should be ignored to label 0 (i.e., background)
+IgnoreLabel = 0
 
 Labels = [
     "background",
