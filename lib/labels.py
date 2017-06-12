@@ -68,23 +68,25 @@ def color_of_label(label):
 def color_of_index(ind):
     return Colormap[ind, :]
 
-def to_one_hot(tensor, scope="ToOneHot"):
-    with tf.name_scope(scope):
-        return tf.one_hot(tensor, NumClasses)
+def to_one_hot(tensor, scope="ToOneHot", device="/cpu:0"):
+    with tf.device(device):
+        with tf.name_scope(scope):
+            return tf.one_hot(tensor, NumClasses)
 
-def to_labels(tensor, scope="ToLabels"):
-    with tf.name_scope(scope):
-        labeled_tensor = IgnoreLabel * tf.ones_like(tensor, dtype=tf.int32)[:, :, :, 0]
+def to_labels(tensor, scope="ToLabels", device="/cpu:0"):
+    with tf.device(device):
+        with tf.name_scope(scope):
+            labeled_tensor = IgnoreLabel * tf.ones_like(tensor, dtype=tf.int32)[:, :, :, 0]
 
-        for label in Labels:
-            opname = "Mask_%s" % (label)
-            color = color_of_label(label)
-            index = index_of_label(label)
-            mask = tf.reduce_all(tf.equal(tensor, color, name=opname), axis=3, name=opname)
+            for label in Labels:
+                opname = "Mask_%s" % (label)
+                color = color_of_label(label)
+                index = index_of_label(label)
+                mask = tf.reduce_all(tf.equal(tensor, color, name=opname), axis=3, name=opname)
 
-            labeled_tensor = tf.where(mask, index * tf.ones_like(labeled_tensor), labeled_tensor)
+                labeled_tensor = tf.where(mask, index * tf.ones_like(labeled_tensor), labeled_tensor)
 
-        return labeled_tensor
+            return labeled_tensor
 
 def _image_layers(tensor):
     layers = []
@@ -93,17 +95,18 @@ def _image_layers(tensor):
 
     return layers
 
-def to_images(tensor, scope="ToImage"):
-    with tf.name_scope(scope):
-        r_layer, g_layer, b_layer = _image_layers(tensor)
+def to_images(tensor, scope="ToImage", device="/cpu:0"):
+    with tf.device(device):
+        with tf.name_scope(scope):
+            r_layer, g_layer, b_layer = _image_layers(tensor)
 
-        for label in Labels:
-            index = index_of_label(label)
-            r, g, b = color_of_label(label)
-            mask = tf.equal(tensor, index)
+            for label in Labels:
+                index = index_of_label(label)
+                r, g, b = color_of_label(label)
+                mask = tf.equal(tensor, index)
 
-            r_layer = tf.where(mask, r * tf.ones_like(r_layer), r_layer)
-            g_layer = tf.where(mask, g * tf.ones_like(g_layer), g_layer)
-            b_layer = tf.where(mask, b * tf.ones_like(b_layer), b_layer)
+                r_layer = tf.where(mask, r * tf.ones_like(r_layer), r_layer)
+                g_layer = tf.where(mask, g * tf.ones_like(g_layer), g_layer)
+                b_layer = tf.where(mask, b * tf.ones_like(b_layer), b_layer)
 
-        return tf.stack([ r_layer, g_layer, b_layer ], axis=3)
+            return tf.stack([ r_layer, g_layer, b_layer ], axis=3)

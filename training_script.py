@@ -24,24 +24,26 @@ SAVE_EVERY = 1000
 
 def create_and_start_queues(sess):
     manager = PipelineManager("/mnt/hdd0/datasets/pascal/VOCdevkit/VOC2012", "dev.txt",
-        target_size=TARGET_SIZE, device="/cpu:0", threads=20)
+        target_size=TARGET_SIZE, device="/cpu:0", threads=(2*BATCH_SIZE))
 
     img_queue = manager.create_queues()
     manager.start_queues(sess)
 
-    image_batch, ground_truth_batch = img_queue.dequeue_up_to(BATCH_SIZE,  name="ImageBatchDequeue")
+    with tf.device("/cpu:0"):
+        image_batch, ground_truth_batch = img_queue.dequeue_up_to(BATCH_SIZE, name="ImageBatchDequeue")
 
     return manager, image_batch, ground_truth_batch
 
 def create_image_summaries(imgs, gt, predicted):
-    with tf.name_scope("ImageSummaries"):
-        im_summ = tf.summary.image("Image", imgs[0:2, :, :, :])
-        gt_summ = tf.summary.image("GroundTruth", gt[0:2, :, :, :])
+    with tf.device("/cpu:0"):
+        with tf.name_scope("ImageSummaries"):
+            im_summ = tf.summary.image("Image", imgs[0:2, :, :, :])
+            gt_summ = tf.summary.image("GroundTruth", gt[0:2, :, :, :])
 
-        pred_imgs = to_images(tf.argmax(predicted, axis=3))
-        pred_summ = tf.summary.image("Prediction", pred_imgs[0:2, :, :, :])
+            pred_imgs = to_images(tf.argmax(predicted, axis=3))
+            pred_summ = tf.summary.image("Prediction", pred_imgs[0:2, :, :, :])
 
-        return [ im_summ, gt_summ, pred_summ ]
+            return [ im_summ, gt_summ, pred_summ ]
 
 def create_savers(graph):
     summary_writer = tf.summary.FileWriter(OUT_DIR, graph=graph)
@@ -64,13 +66,13 @@ def main(_):
     with tf.Session() as sess:
         manager, image_batch, ground_truth_batch = create_and_start_queues(sess)
         preds = deeplab.network(image_batch)
-        labeled_ground_truth = to_labels(ground_truth_batch)
+        labeled_ground_truth = to_labels(ground_truth_batch, device="/cpu:0")
         resized_preds = tf.image.resize_images(preds, TARGET_SIZE,
             method=tf.image.ResizeMethod.BILINEAR)
         img_summaries = create_image_summaries(image_batch, ground_truth_batch, resized_preds)
 
-        avg_accuracy = average_accuracy(labeled_ground_truth, resized_preds)
-        xentropy = cross_entropy(labeled_ground_truth, resized_preds)
+        avg_accuracy = average_accuracy(labeled_ground_truth, resized_preds, device="/cpu:0")
+        xentropy = cross_entropy(labeled_ground_truth, resized_preds, device="/cpu:0")
         reg_vars = tf.get_collection(tf.GraphKeys.REGULARIZATION_LOSSES)
         reg_losses = tf.add_n(reg_vars)
         total_loss = xentropy + reg_losses
