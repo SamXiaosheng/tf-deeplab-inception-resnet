@@ -18,9 +18,9 @@ from labels import to_labels, to_images
 
 OUT_DIR = "/tmp/deeplab"
 TARGET_SIZE = [350, 500]
-BATCH_SIZE = 5
+BATCH_SIZE = 2
 STEPS = 100000
-SAVE_EVERY = 1000
+SAVE_EVERY = 2 # 1000
 
 def create_and_start_queues(sess):
     manager = PipelineManager("/mnt/hdd0/datasets/pascal/VOCdevkit/VOC2012", "dev.txt",
@@ -73,24 +73,20 @@ def save_checkpoint(step, sess, saver, summary_writer, avg_accuracy, xentropy, i
         summary_writer.add_summary(summary, step)
 
 def main(_):
-    os.system("rm %s" % (os.path.join(OUT_DIR, "*")))
-
     with tf.Session() as sess:
         manager, image_batch, ground_truth_batch = create_and_start_queues(sess)
-        preds = deeplab.network(image_batch)
+        preds = deeplab.network(image_batch, resize=TARGET_SIZE)
         labeled_ground_truth = to_labels(ground_truth_batch, device="/cpu:0")
-        resized_preds = tf.image.resize_images(preds, TARGET_SIZE,
-            method=tf.image.ResizeMethod.BILINEAR)
 
-        avg_accuracy = average_accuracy(labeled_ground_truth, resized_preds, device="/cpu:0")
-        xentropy = cross_entropy(labeled_ground_truth, resized_preds, device="/cpu:0")
+        avg_accuracy = average_accuracy(labeled_ground_truth, preds, device="/cpu:0")
+        xentropy = cross_entropy(labeled_ground_truth, preds, device="/cpu:0")
         reg_vars = tf.get_collection(tf.GraphKeys.REGULARIZATION_LOSSES)
         reg_losses = tf.add_n(reg_vars)
         total_loss = xentropy + reg_losses
 
-        train_step = tf.train.MomentumOptimizer(0.00001, 0.9).minimize(total_loss)
+        train_step = tf.train.MomentumOptimizer(0.001, 0.9).minimize(total_loss)
 
-        img_summaries = create_image_summaries(image_batch, ground_truth_batch, resized_preds)
+        img_summaries = create_image_summaries(image_batch, ground_truth_batch, preds)
         scalar_summaries = create_scalar_summaries(xentropy, total_loss, avg_accuracy)
 
         sess.run([ tf.local_variables_initializer(), tf.global_variables_initializer() ])
