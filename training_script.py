@@ -81,8 +81,8 @@ def main(_):
         avg_accuracy = average_accuracy(labeled_ground_truth, preds, device="/cpu:0")
         xentropy = cross_entropy(labeled_ground_truth, preds, device="/cpu:0")
         reg_vars = tf.get_collection(tf.GraphKeys.REGULARIZATION_LOSSES)
-        reg_losses = tf.add_n(reg_vars)
-        total_loss = xentropy + reg_losses
+        reg_losses = tf.add_n(reg_vars, name="RegularizationLoss")
+        total_loss = tf.add(xentropy, reg_losses, name="TotalLoss")
 
         train_step = tf.train.MomentumOptimizer(0.001, 0.9).minimize(total_loss)
 
