@@ -15,10 +15,13 @@ import deeplab
 from pipeline import PipelineManager
 from training import average_accuracy, cross_entropy
 from labels import to_labels, to_images
+from checkpoints import load_checkpoint
 
+BASE_CHECKPOINT = "/mnt/hdd0/datasets/nets/inception_resnet_v2_2016_08_30.ckpt"
 OUT_DIR = "/tmp/deeplab"
 TARGET_SIZE = [350, 500]
-BATCH_SIZE = 5
+
+BATCH_SIZE = 2
 STEPS = 100000
 SAVE_EVERY = 100
 
@@ -59,16 +62,16 @@ def create_savers(graph):
     return summary_writer, saver
 
 def save_checkpoint(step, sess, saver, summary_writer, avg_accuracy, xentropy, summaries):
+    if (step % SAVE_EVERY == 0):
+        _avg_accuracy, _xentropy, _summaries = sess.run([ avg_accuracy, xentropy, summaries ])
 
-    _avg_accuracy, _xentropy, _summaries = sess.run([ avg_accuracy, xentropy, summaries ])
+        print("%7d: Accuracy = %7.3f, Xentropy = %7.3f" % (step, 100 * _avg_accuracy, _xentropy))
 
-    print("%7d: Accuracy = %7.3f, Xentropy = %7.3f" % (step, 100 * _avg_accuracy, _xentropy))
+        model_path = os.path.join(OUT_DIR, "model.ckpt")
+        saver.save(sess, model_path, global_step=step)
 
-    model_path = os.path.join(OUT_DIR, "model.ckpt")
-    saver.save(sess, model_path, global_step=step)
-
-    for summary in _summaries:
-        summary_writer.add_summary(summary, step)
+        for summary in _summaries:
+            summary_writer.add_summary(summary, step)
 
 def main(_):
     with tf.Session() as sess:
@@ -88,15 +91,15 @@ def main(_):
         scalar_summaries = create_scalar_summaries(xentropy, total_loss, avg_accuracy)
         all_summaries = img_summaries + scalar_summaries + network_summaries
 
+        load_checkpoint(BASE_CHECKPOINT, sess)
+
         sess.run([ tf.local_variables_initializer(), tf.global_variables_initializer() ])
         summary_writer, saver = create_savers(sess.graph)
 
         for i in range(STEPS):
             sess.run(train_step)
 
-            if (i % SAVE_EVERY == 0):
-                save_checkpoint(i, sess, saver, summary_writer, avg_accuracy, xentropy,
-                    all_summaries)
+            save_checkpoint(i, sess, saver, summary_writer, avg_accuracy, xentropy, all_summaries)
 
         manager.stop_queues()
         summary_writer.flush()
