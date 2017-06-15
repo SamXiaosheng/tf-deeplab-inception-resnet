@@ -36,12 +36,13 @@ def average_accuracy(gt, preds, device="/cpu:0"):
     with tf.device(device):
         with tf.name_scope("AverageAccuracy"):
             predictions = tf.argmax(preds, axis=3)
+            num_labels = tf.constant(len(Labels), dtype=tf.float64)
             avg_acc = tf.constant(0.0, dtype=tf.float64)
 
             for label in Labels:
                 avg_acc += _avg_label_accuracy(label, gt, predictions)
 
-            return tf.divide(avg_acc, len(Labels), name="avg_accuracy")
+            return tf.divide(avg_acc, num_labels, name="avg_accuracy")
 
 def cross_entropy(gt, logits, device="/cpu:0"):
     with tf.device(device):

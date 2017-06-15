@@ -31,7 +31,17 @@ def _atrous_spatial_pyramind_pooling(net, num_classes):
         return tf.add_n([ aspp_r6, aspp_r12, aspp_r18, aspp_r24 ])
 
 def _create_summaries(resnet_endpoints):
-    return []
+    summaries = set(tf.get_collection(tf.GraphKeys.SUMMARIES))
+
+    for end_point in resnet_endpoints:
+        x = resnet_endpoints[end_point]
+        summaries.add(tf.summary.histogram('activations/' + end_point, x))
+        summaries.add(tf.summary.scalar('sparsity/' + end_point, tf.nn.zero_fraction(x)))
+
+    for variable in slim.get_model_variables():
+        summaries.add(tf.summary.histogram(variable.op.name, variable))
+
+    return list(summaries)
 
 def network(imgs, num_classes=21, is_training=True,
     dropout_keep_prob=0.8, reuse=None, resize=None):

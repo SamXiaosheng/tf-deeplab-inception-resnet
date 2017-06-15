@@ -18,9 +18,9 @@ from labels import to_labels, to_images
 
 OUT_DIR = "/tmp/deeplab"
 TARGET_SIZE = [350, 500]
-BATCH_SIZE = 2
+BATCH_SIZE = 5
 STEPS = 100000
-SAVE_EVERY = 2 # 1000
+SAVE_EVERY = 100
 
 def create_and_start_queues(sess):
     manager = PipelineManager("/mnt/hdd0/datasets/pascal/VOCdevkit/VOC2012", "dev.txt",
@@ -58,18 +58,16 @@ def create_savers(graph):
 
     return summary_writer, saver
 
-def save_checkpoint(step, sess, saver, summary_writer, avg_accuracy, xentropy, img_summaries,
-    scalar_summaries):
+def save_checkpoint(step, sess, saver, summary_writer, avg_accuracy, xentropy, summaries):
 
-    _avg_accuracy, _xentropy, _img_summaries, _scalar_summaries = sess.run([ avg_accuracy, xentropy,
-        img_summaries, scalar_summaries ])
+    _avg_accuracy, _xentropy, _summaries = sess.run([ avg_accuracy, xentropy, summaries ])
 
     print("%7d: Accuracy = %7.3f, Xentropy = %7.3f" % (step, 100 * _avg_accuracy, _xentropy))
 
     model_path = os.path.join(OUT_DIR, "model.ckpt")
     saver.save(sess, model_path, global_step=step)
 
-    for summary in (_img_summaries + _scalar_summaries):
+    for summary in _summaries:
         summary_writer.add_summary(summary, step)
 
 def main(_):
@@ -88,6 +86,7 @@ def main(_):
 
         img_summaries = create_image_summaries(image_batch, ground_truth_batch, preds)
         scalar_summaries = create_scalar_summaries(xentropy, total_loss, avg_accuracy)
+        all_summaries = img_summaries + scalar_summaries + network_summaries
 
         sess.run([ tf.local_variables_initializer(), tf.global_variables_initializer() ])
         summary_writer, saver = create_savers(sess.graph)
@@ -97,7 +96,7 @@ def main(_):
 
             if (i % SAVE_EVERY == 0):
                 save_checkpoint(i, sess, saver, summary_writer, avg_accuracy, xentropy,
-                    img_summaries, scalar_summaries)
+                    all_summaries)
 
         manager.stop_queues()
         summary_writer.flush()
