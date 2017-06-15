@@ -75,7 +75,7 @@ def save_checkpoint(step, sess, saver, summary_writer, avg_accuracy, xentropy, i
 def main(_):
     with tf.Session() as sess:
         manager, image_batch, ground_truth_batch = create_and_start_queues(sess)
-        preds = deeplab.network(image_batch, resize=TARGET_SIZE)
+        preds, network_summaries = deeplab.network(image_batch, resize=TARGET_SIZE)
         labeled_ground_truth = to_labels(ground_truth_batch, device="/cpu:0")
 
         avg_accuracy = average_accuracy(labeled_ground_truth, preds, device="/cpu:0")

@@ -30,17 +30,22 @@ def _atrous_spatial_pyramind_pooling(net, num_classes):
 
         return tf.add_n([ aspp_r6, aspp_r12, aspp_r18, aspp_r24 ])
 
+def _create_summaries(resnet_endpoints):
+    return []
+
 def network(imgs, num_classes=21, is_training=True,
     dropout_keep_prob=0.8, reuse=None, resize=None):
 
     arg_scope = inception_resnet_v2_arg_scope(weight_decay=0.0005)
     with slim.arg_scope(arg_scope) as scope:
-        resnet = inception_resnet_v2(imgs, is_training=is_training,
+        resnet, endpoints = inception_resnet_v2(imgs, is_training=is_training,
             dropout_keep_prob=dropout_keep_prob, reuse=reuse)
 
     aspp = _atrous_spatial_pyramind_pooling(resnet, num_classes)
 
+    summaries = _create_summaries(endpoints)
+
     if (resize is not None):
         aspp = tf.image.resize_images(aspp, resize, method=tf.image.ResizeMethod.BILINEAR)
 
-    return aspp
+    return aspp, summaries
