@@ -61,7 +61,9 @@ def create_savers(graph):
 
     return summary_writer, saver
 
-def save_checkpoint(step, sess, saver, summary_writer, avg_accuracy, xentropy, summaries):
+def save_checkpoint(global_step, sess, saver, summary_writer, avg_accuracy, xentropy, summaries):
+    step = tf.train.global_step(sess, global_step)
+
     if (step % SAVE_EVERY == 0):
         _avg_accuracy, _xentropy, _summaries = sess.run([ avg_accuracy, xentropy, summaries ])
 
@@ -73,8 +75,22 @@ def save_checkpoint(step, sess, saver, summary_writer, avg_accuracy, xentropy, s
         for summary in _summaries:
             summary_writer.add_summary(summary, step)
 
+def create_global_step():
+    global_step = tf.Variable(0, trainable=False, name="global_step")
+    incr_op = tf.assign_add(global_step, 1, name="IncrGlobalStep")
+
+    return global_step, incr_op
+
+def configure_train_step(step, loss_fn):
+    learning_rate = tf.multiply(tf.constant(0.001, dtype=tf.float64), tf.pow(1 - (step/STEPS), 0.9), name="learning_rate")
+    train_step = tf.train.MomentumOptimizer(learning_rate, 0.9).minimize(loss_fn)
+
+    return train_step, learning_rate
+
 def main(_):
     with tf.Session() as sess:
+        global_step, incr_op = create_global_step()
+
         manager, image_batch, ground_truth_batch = create_and_start_queues(sess)
         preds, network_summaries = deeplab.network(image_batch, resize=TARGET_SIZE)
         labeled_ground_truth = to_labels(ground_truth_batch, device="/cpu:0")
@@ -85,10 +101,10 @@ def main(_):
         reg_losses = tf.add_n(reg_vars, name="RegularizationLoss")
         total_loss = tf.add(xentropy, reg_losses, name="TotalLoss")
 
-        train_step = tf.train.MomentumOptimizer(0.001, 0.9).minimize(total_loss)
+        train_step, learning_rate = configure_train_step(global_step, total_loss)
 
         img_summaries = create_image_summaries(image_batch, ground_truth_batch, preds)
-        scalar_summaries = create_scalar_summaries(xentropy, total_loss, avg_accuracy)
+        scalar_summaries = create_scalar_summaries(xentropy, total_loss, avg_accuracy, learning_rate)
         all_summaries = img_summaries + scalar_summaries + network_summaries
 
         load_checkpoint(BASE_CHECKPOINT, OUT_DIR, sess)
@@ -96,10 +112,11 @@ def main(_):
         sess.run([ tf.local_variables_initializer(), tf.global_variables_initializer() ])
         summary_writer, saver = create_savers(sess.graph)
 
-        for i in range(STEPS):
-            sess.run(train_step)
+        for _ in range(STEPS):
+            sess.run([ incr_op, train_step ])
 
-            save_checkpoint(i, sess, saver, summary_writer, avg_accuracy, xentropy, all_summaries)
+            save_checkpoint(global_step, sess, saver, summary_writer, avg_accuracy, xentropy,
+                all_summaries)
 
         manager.stop_queues()
         summary_writer.flush()
