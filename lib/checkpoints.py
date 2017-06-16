@@ -23,15 +23,25 @@ def _excluded(name):
 
     return excluded
 
-def load_checkpoint(checkpoint_dir, sess):
-    variables_to_restore = []
-    for var in slim.get_model_variables():
-        if (not _excluded(var.op.name)):
-            variables_to_restore.append(var)
+def load_checkpoint(checkpoint_dir, train_dir, sess):
+    load_dir = None
 
-    assign_fn = slim.assign_from_checkpoint_fn(
-        checkpoint_dir,
-        variables_to_restore,
-        ignore_missing_vars=True)
+    if tf.train.latest_checkpoint(train_dir):
+        print("Training checkpoint exists at %s" % (train_dir))
+        load_dir = tf.train.latest_checkpoint(train_dir)
+    elif (checkpoint_dir is not None):
+        print("Found checkpoint at %s" % (checkpoint_dir))
+        load_dir = checkpoint_dir
 
-    assign_fn(sess)
+    if (load_dir):
+        variables_to_restore = []
+        for var in slim.get_model_variables():
+            if (not _excluded(var.op.name)):
+                variables_to_restore.append(var)
+
+        assign_fn = slim.assign_from_checkpoint_fn(
+            checkpoint_dir,
+            variables_to_restore,
+            ignore_missing_vars=True)
+
+        assign_fn(sess)

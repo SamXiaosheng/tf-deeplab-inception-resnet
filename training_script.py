@@ -91,7 +91,7 @@ def main(_):
         scalar_summaries = create_scalar_summaries(xentropy, total_loss, avg_accuracy)
         all_summaries = img_summaries + scalar_summaries + network_summaries
 
-        load_checkpoint(BASE_CHECKPOINT, sess)
+        load_checkpoint(BASE_CHECKPOINT, OUT_DIR, sess)
 
         sess.run([ tf.local_variables_initializer(), tf.global_variables_initializer() ])
         summary_writer, saver = create_savers(sess.graph)
