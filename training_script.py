@@ -21,12 +21,12 @@ BASE_CHECKPOINT = "/mnt/hdd0/datasets/nets/inception_resnet_v2_2016_08_30.ckpt"
 OUT_DIR = "/tmp/deeplab"
 TARGET_SIZE = [350, 500]
 
-BATCH_SIZE = 2
+BATCH_SIZE = 8
 STEPS = 100000
-SAVE_EVERY = 100
+SAVE_EVERY = 500
 
 def create_and_start_queues(sess):
-    manager = PipelineManager("/mnt/hdd0/datasets/pascal/VOCdevkit/VOC2012", "dev.txt",
+    manager = PipelineManager("/mnt/hdd0/datasets/pascal/VOCdevkit/VOC2012", "train.txt",
         target_size=TARGET_SIZE, device="/cpu:0", threads=(2*BATCH_SIZE))
 
     img_queue = manager.create_queues()
