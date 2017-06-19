@@ -21,9 +21,10 @@ BASE_CHECKPOINT = "/mnt/hdd0/datasets/nets/inception_resnet_v2_2016_08_30.ckpt"
 OUT_DIR = "/tmp/deeplab"
 TARGET_SIZE = [350, 500]
 
-EPCH_SIZE = 1464
+EPOCH_SIZE = 1464
+NUM_EPOCHS = 400
 BATCH_SIZE = 5
-STEPS = EPOCH_SIZE * 100
+STEPS = int(EPOCH_SIZE * NUM_EPOCHS / BATCH_SIZE)
 SAVE_EVERY = 500
 
 def create_and_start_queues(sess):
@@ -84,8 +85,9 @@ def create_global_step():
 
 def configure_train_step(step, loss_fn):
     base_learning_rate = tf.constant(0.001, dtype=tf.float64, name="base_learning_rate")
-    epoch = tf.floor_div(step, EPOCH_SIZE, name="current_epoch")
-    learning_rate = tf.multiply(base_learning_rate, tf.pow(1 - epoch, 0.9), name="learning_rate")
+    # epoch = tf.cast(tf.floor_div(BATCH_SIZE * step, EPOCH_SIZE, name="current_epoch"), dtype=tf.float64)
+    learning_rate = tf.multiply(base_learning_rate, tf.pow(1.0 - (step/STEPS), 0.9),
+        name="learning_rate")
     train_step = tf.train.MomentumOptimizer(learning_rate, 0.9).minimize(loss_fn)
 
     return train_step, learning_rate
